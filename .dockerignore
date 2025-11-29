@@ -1,0 +1,17 @@
+node_modules
+.git
+.gitignore
+.vscode
+.cta.json
+dev.db
+*.log
+.env
+.env.local
+.env.*.local
+dist
+.DS_Store
+coverage
+*.swp
+*.swo
+*~
+

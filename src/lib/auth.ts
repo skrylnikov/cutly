@@ -1,0 +1,137 @@
+import * as client from 'openid-client'
+import type { Configuration } from 'openid-client'
+
+let config: Configuration | null = null
+
+/**
+ * Initialize OIDC client
+ */
+export async function getClient(): Promise<Configuration | null> {
+  if (config) {
+    return config
+  }
+
+  const issuerUrl = process.env.OIDC_ISSUER
+  const clientId = process.env.OIDC_CLIENT_ID
+  const clientSecret = process.env.OIDC_CLIENT_SECRET
+
+  if (!issuerUrl || !clientId || !clientSecret) {
+    return null
+  }
+
+  try {
+    config = await client.discovery(
+      new URL(issuerUrl),
+      clientId,
+      clientSecret,
+    )
+    return config
+  } catch (error) {
+    console.error('Failed to initialize OIDC client:', error)
+    return null
+  }
+}
+
+/**
+ * Get current user session from cookies
+ */
+export async function getAuthSession(request?: Request): Promise<string | null> {
+  if (request) {
+    const cookies = request.headers.get('cookie')
+    if (cookies) {
+      const sessionCookie = cookies
+        .split(';')
+        .find((c) => c.trim().startsWith('oidc_session='))
+      if (sessionCookie) {
+        try {
+          const sessionValue = decodeURIComponent(
+            sessionCookie.split('=')[1],
+          )
+          const session = JSON.parse(sessionValue)
+          return session.userId || null
+        } catch {
+          return null
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Create URL for OIDC authorization
+ */
+export async function getAuthUrl(
+  redirectUri: string,
+): Promise<{ url: string; cookies: string[] }> {
+  const oidcConfig = await getClient()
+  if (!oidcConfig) {
+    throw new Error('OIDC client not configured')
+  }
+
+  const codeVerifier = client.randomPKCECodeVerifier()
+  const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier)
+  const state = client.randomState()
+
+  const parameters: Record<string, string> = {
+    redirect_uri: redirectUri,
+    scope: 'openid profile email',
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+    state,
+  }
+
+  const authUrl = client.buildAuthorizationUrl(oidcConfig, parameters)
+
+  const cookies = [
+    `oidc_code_verifier=${codeVerifier}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
+    `oidc_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
+  ]
+
+  return { url: authUrl.href, cookies }
+}
+
+/**
+ * Handle OIDC callback
+ */
+export async function handleCallback(
+  currentUrl: URL,
+  codeVerifier: string,
+  expectedState: string,
+): Promise<{ userId: string; accessToken: string }> {
+  const oidcConfig = await getClient()
+  if (!oidcConfig) {
+    throw new Error('OIDC client not configured')
+  }
+
+  const tokenSet = await client.authorizationCodeGrant(oidcConfig, currentUrl, {
+    pkceCodeVerifier: codeVerifier,
+    expectedState,
+  })
+
+  const idToken = tokenSet.claims()
+  if (!idToken) {
+    throw new Error('ID token not found in response')
+  }
+  const userId = idToken.sub as string
+
+  return {
+    userId,
+    accessToken: tokenSet.access_token!,
+  }
+}
+
+/**
+ * Check authorization (middleware)
+ */
+export async function requireAuth(
+  request?: Request,
+): Promise<{ userId: string }> {
+  const userId = await getAuthSession(request)
+  if (!userId) {
+    throw new Error('Unauthorized')
+  }
+  return { userId }
+}
+

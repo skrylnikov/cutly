@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model ShortLink {
+  id        Int      @id @default(autoincrement())
+  originalUrl String
+  shortId   String   @unique
+  length    Int      @default(6)
+  userId    String?  // null for unauthorized
+  createdAt DateTime @default(now())
+  clicks    Click[]
+  
+  @@index([shortId])
+  @@index([userId])
+  @@index([originalUrl])
+}
+
+model Click {
+  id        Int      @id @default(autoincrement())
+  shortLinkId Int
+  shortLink ShortLink @relation(fields: [shortLinkId], references: [id], onDelete: Cascade)
+  ip        String?
+  userAgent String?
+  userId    String?  // null for unauthorized
+  createdAt DateTime @default(now())
+  
+  @@index([shortLinkId])
+  @@index([createdAt])
+}
+

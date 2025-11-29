@@ -55,10 +55,10 @@ export async function createShortLink(
     }
   }
 
-  let shortId: string
+  let shortId: string | undefined
   let attempts = 0
 
-  do {
+  while (attempts < MAX_RETRIES) {
     shortId = nanoid(length)
     const existing = await prisma.shortLink.findUnique({
       where: { shortId },
@@ -69,10 +69,11 @@ export async function createShortLink(
     }
 
     attempts++
-    if (attempts >= MAX_RETRIES) {
-      throw new Error('Failed to generate unique shortId after multiple attempts')
-    }
-  } while (true)
+  }
+
+  if (!shortId) {
+    throw new Error('Failed to generate unique shortId after multiple attempts')
+  }
 
   const shortLink = await prisma.shortLink.create({
     data: {

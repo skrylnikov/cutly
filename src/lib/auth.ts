@@ -116,9 +116,14 @@ export async function handleCallback(
   }
   const userId = idToken.sub as string
 
+  const accessToken = tokenSet.access_token
+  if (!accessToken) {
+    throw new Error('Access token not found in response')
+  }
+
   return {
     userId,
-    accessToken: tokenSet.access_token!,
+    accessToken,
   }
 }
 

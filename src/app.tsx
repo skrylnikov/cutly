@@ -1,8 +1,8 @@
-import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { MantineProvider } from "@mantine/core";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 import "@mantine/core/styles.css";
-import { routeTree } from "./routeTree.gen";
 import { theme } from "./lib/theme";
+import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({ routeTree });
 

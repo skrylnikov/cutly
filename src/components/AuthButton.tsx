@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
 import { Button } from "@mantine/core";
-import { createServerFn, createMiddleware } from "@tanstack/react-start";
+import { createMiddleware, createServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
 import { getAuthSession, getClient } from "../lib/auth";
 
 const requestMiddleware = createMiddleware({ type: "request" }).server(

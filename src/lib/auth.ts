@@ -1,5 +1,5 @@
-import * as client from "openid-client";
 import type { Configuration } from "openid-client";
+import * as client from "openid-client";
 
 let config: Configuration | null = null;
 

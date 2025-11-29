@@ -1,12 +1,10 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import { MantineProvider } from "@mantine/core";
-
 import mantineCss from "@mantine/core/styles.css?url";
-
-import appCss from "../styles.css?url";
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { theme } from "../lib/theme";
+import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
 	head: () => ({

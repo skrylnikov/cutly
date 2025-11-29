@@ -7,6 +7,7 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from "./models/ShortLink.ts";
-export type * from "./models/Click.ts";
+
 export type * from "./commonInputTypes.ts";
+export type * from "./models/Click.ts";
+export type * from "./models/ShortLink.ts";

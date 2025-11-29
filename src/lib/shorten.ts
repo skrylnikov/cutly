@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { prisma } from "../db";
-import { normalizeUrl, isValidUrl } from "./utils";
+import { isValidUrl, normalizeUrl } from "./utils";
 
 export interface CreateShortLinkInput {
 	originalUrl: string;

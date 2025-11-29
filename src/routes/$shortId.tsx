@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getShortLinkByShortId } from "../lib/shorten";
 import { prisma } from "../db";
+import { getShortLinkByShortId } from "../lib/shorten";
 
 export const Route = createFileRoute("/$shortId")({
 	server: {

@@ -1,25 +1,24 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import {
-	Container,
-	Paper,
-	TextInput,
-	Slider,
-	Button,
-	Text,
-	Group,
-	Stack,
-	Title,
-	CopyButton,
 	ActionIcon,
-	Tooltip,
 	Alert,
+	Button,
+	Container,
+	CopyButton,
+	Group,
+	Paper,
+	Slider,
+	Stack,
+	Text,
+	TextInput,
+	Title,
+	Tooltip,
 } from "@mantine/core";
-import { createShortLinkFn } from "../lib/server-functions";
-import { getBaseUrl } from "../lib/utils";
-import { isValidUrl, normalizeUrl } from "../lib/utils";
-import AuthButton from "../components/AuthButton";
+import { createFileRoute } from "@tanstack/react-router";
 import { Check, Copy, X } from "lucide-react";
+import { useState } from "react";
+import AuthButton from "../components/AuthButton";
+import { createShortLinkFn } from "../lib/server-functions";
+import { getBaseUrl, isValidUrl, normalizeUrl } from "../lib/utils";
 
 export const Route = createFileRoute("/")({
 	component: Home,

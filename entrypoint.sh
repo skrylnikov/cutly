@@ -11,8 +11,9 @@ fi
 chown -R bun:bun "$DATA_DIR"
 
 # Switch to bun user for running the application
+# Pass environment variables to sudo command
 echo "Running database migrations..."
-sudo -u bun bunx prisma migrate deploy
+sudo -E -u bun env DATABASE_URL="$DATABASE_URL" bunx prisma migrate deploy
 
 # Set Vite additional server allowed hosts from APP_URL
 if [ -n "$APP_URL" ]; then
@@ -34,5 +35,5 @@ echo "Starting Nitro server with PORT=$PORT, HOST=$HOST"
 
 # Change to app directory and run Nitro server
 cd /usr/src/app
-exec sudo -u bun bun .output/server/index.mjs
+exec sudo -E -u bun bun .output/server/index.mjs
 

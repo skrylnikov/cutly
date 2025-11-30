@@ -29,8 +29,8 @@ RUN bun run build
 
 # copy production dependencies and source code into final image
 FROM base AS release
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install curl for healthcheck and su-exec for user switching
+RUN apk add --no-cache curl su-exec
 
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/.output ./.output
@@ -41,6 +41,6 @@ COPY --from=prerelease /usr/src/app/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # run the app
-USER bun
+# Note: entrypoint.sh runs as root to fix volume permissions, then switches to bun user
 EXPOSE 3000/tcp
 ENTRYPOINT ["/entrypoint.sh"]

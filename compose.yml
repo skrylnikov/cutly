@@ -1,9 +1,7 @@
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/skrylnikov/cutly:latest
     container_name: cutly-app
     ports:
       - "3000:3000"
@@ -19,8 +17,7 @@ services:
       # Application URL (optional - defaults to http://localhost:3000)
       - APP_URL=${APP_URL:-http://localhost:3000}
     volumes:
-      # Persist database file
-      - ./data:/app/data
+      - cutly-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
@@ -29,3 +26,5 @@ services:
       retries: 3
       start_period: 40s
 
+volumes:
+  cutly-data:

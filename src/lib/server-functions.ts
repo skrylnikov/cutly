@@ -34,7 +34,9 @@ export const createShortLinkFn = createServerFn({
 			} catch (error) {
 				console.error("Error creating short link:", error);
 				throw new Error(
-					error instanceof Error ? error.message : "Failed to create short link",
+					error instanceof Error
+						? error.message
+						: "Failed to create short link",
 				);
 			}
 		}

@@ -39,7 +39,7 @@ export function getBaseUrl(): string {
  * nanoid uses 64-character alphabet (A-Z, a-z, 0-9, _, -)
  */
 export function calculatePossibleUrls(length: number): number {
-	return Math.pow(64, length);
+	return 64 ** length;
 }
 
 /**
@@ -55,17 +55,17 @@ export function formatLargeNumber(num: number): string {
 		return addCommas(num);
 	}
 	if (num < 1000000) {
-		return addCommas(Math.floor(num / 1000)) + "K";
+		return `${addCommas(Math.floor(num / 1000))}K`;
 	}
 	if (num < 1000000000) {
-		return addCommas(Math.floor(num / 1000000)) + "M";
+		return `${addCommas(Math.floor(num / 1000000))}M`;
 	}
 	if (num < 1000000000000) {
-		return addCommas(Math.floor(num / 1000000000)) + "B";
+		return `${addCommas(Math.floor(num / 1000000000))}B`;
 	}
 	if (num < 1000000000000000) {
-		return addCommas(Math.floor(num / 1000000000000)) + "T";
+		return `${addCommas(Math.floor(num / 1000000000000))}T`;
 	}
 	// For extremely large numbers, use T suffix with full number
-	return addCommas(num) + "T";
+	return `${addCommas(num)}T`;
 }

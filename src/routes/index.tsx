@@ -94,7 +94,8 @@ function Home() {
 								Short link length: {length} characters
 							</Text>
 							<Text size="xs" c="dimmed" mb="sm">
-								Possible combinations: {formatLargeNumber(calculatePossibleUrls(length))}
+								Possible combinations:{" "}
+								{formatLargeNumber(calculatePossibleUrls(length))}
 							</Text>
 							<Slider
 								value={length}

@@ -38,14 +38,14 @@ export const Route = createFileRoute("/api/auth/callback")({
 
 				try {
 					const currentUrl = new URL(request.url);
-					const { userId } = await handleCallback(
+					const { userId, displayName } = await handleCallback(
 						currentUrl,
 						codeVerifier,
 						savedState,
 					);
 
 					// Create session cookie and remove temporary cookies
-					const session = JSON.stringify({ userId });
+					const session = JSON.stringify({ userId, displayName });
 					const sessionCookie = `oidc_session=${encodeURIComponent(session)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
 					const clearCookies = [
 						sessionCookie,

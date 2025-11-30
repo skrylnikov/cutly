@@ -16,8 +16,8 @@ const getSession = createServerFn({
 })
 	.middleware([requestMiddleware])
 	.handler(async ({ context }) => {
-		const userId = await getAuthSession(context.request);
-		return { userId };
+		const session = await getAuthSession(context.request);
+		return session ? { userId: session.userId, displayName: session.displayName } : null;
 	});
 
 const checkOidcConfigured = createServerFn({
@@ -28,14 +28,14 @@ const checkOidcConfigured = createServerFn({
 });
 
 export default function AuthButton() {
-	const [userId, setUserId] = useState<string | null>(null);
+	const [session, setSession] = useState<{ userId: string; displayName: string } | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isOidcConfigured, setIsOidcConfigured] = useState(false);
 
 	useEffect(() => {
 		Promise.all([
-			getSession().then(({ userId }) => {
-				setUserId(userId);
+			getSession().then((result) => {
+				setSession(result);
 			}),
 			checkOidcConfigured().then(({ isConfigured }) => {
 				setIsOidcConfigured(isConfigured);
@@ -62,11 +62,11 @@ export default function AuthButton() {
 		);
 	}
 
-	if (userId) {
+	if (session) {
 		return (
 			<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
 				<span style={{ fontSize: "14px", color: "#9ca3af" }}>
-					User: {userId}
+					User: {session.displayName}
 				</span>
 				<Button
 					variant="light"

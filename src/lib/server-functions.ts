@@ -18,8 +18,8 @@ export const createShortLinkFn = createServerFn({
 	.handler(async ({ data, context }) => {
 		// If OIDC is configured, require authentication
 		if (isOidcConfigured()) {
-			const userId = await getAuthSession(context.request);
-			if (!userId) {
+			const session = await getAuthSession(context.request);
+			if (!session) {
 				throw new Error("Unauthorized: Authentication required");
 			}
 
@@ -27,7 +27,7 @@ export const createShortLinkFn = createServerFn({
 				const result = await createShortLink({
 					originalUrl: data.originalUrl,
 					length: data.length ?? 4,
-					userId,
+					userId: session.userId,
 				});
 
 				return result;
@@ -42,7 +42,8 @@ export const createShortLinkFn = createServerFn({
 		}
 
 		// If OIDC is not configured, allow unauthenticated users
-		const userId = await getAuthSession(context.request);
+		const session = await getAuthSession(context.request);
+		const userId = session?.userId ?? null;
 
 		try {
 			const result = await createShortLink({

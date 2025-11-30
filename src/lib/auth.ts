@@ -33,7 +33,7 @@ export async function getClient(): Promise<Configuration | null> {
  */
 export async function getAuthSession(
 	request?: Request,
-): Promise<string | null> {
+): Promise<{ userId: string; displayName: string } | null> {
 	if (request) {
 		const cookies = request.headers.get("cookie");
 		if (cookies) {
@@ -44,7 +44,13 @@ export async function getAuthSession(
 				try {
 					const sessionValue = decodeURIComponent(sessionCookie.split("=")[1]);
 					const session = JSON.parse(sessionValue);
-					return session.userId || null;
+					if (session.userId) {
+						return {
+							userId: session.userId,
+							displayName: session.displayName || session.userId,
+						};
+					}
+					return null;
 				} catch {
 					return null;
 				}
@@ -95,7 +101,7 @@ export async function handleCallback(
 	currentUrl: URL,
 	codeVerifier: string,
 	expectedState: string,
-): Promise<{ userId: string; accessToken: string }> {
+): Promise<{ userId: string; displayName: string; accessToken: string }> {
 	const oidcConfig = await getClient();
 	if (!oidcConfig) {
 		throw new Error("OIDC client not configured");
@@ -112,6 +118,14 @@ export async function handleCallback(
 	}
 	const userId = idToken.sub as string;
 
+	// Extract display name with fallback priority: name > preferred_username > email > sub
+	const displayName =
+		(idToken.display_name as string | undefined) ||
+		(idToken.name as string | undefined) ||
+		(idToken.preferred_username as string | undefined) ||
+		(idToken.email as string | undefined) ||
+		userId;
+
 	const accessToken = tokenSet.access_token;
 	if (!accessToken) {
 		throw new Error("Access token not found in response");
@@ -119,6 +133,7 @@ export async function handleCallback(
 
 	return {
 		userId,
+		displayName,
 		accessToken,
 	};
 }
@@ -139,10 +154,10 @@ export function isOidcConfigured(): boolean {
  */
 export async function requireAuth(
 	request?: Request,
-): Promise<{ userId: string }> {
-	const userId = await getAuthSession(request);
-	if (!userId) {
+): Promise<{ userId: string; displayName: string }> {
+	const session = await getAuthSession(request);
+	if (!session) {
 		throw new Error("Unauthorized");
 	}
-	return { userId };
+	return session;
 }

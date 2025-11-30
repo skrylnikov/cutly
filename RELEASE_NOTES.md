@@ -1,5 +1,18 @@
 # Release Notes
 
+## Version 0.1.1
+
+### 🐛 Bug Fixes
+
+- Fixed latest tag
+- Fixed display name rendering in login button
+
+### 📝 Documentation
+
+- Updated readme
+
+---
+
 ## Version 0.1.0 - Initial Release
 
 This is the first release of Cutly - a URL shortener service. This version introduces the core functionality of the application.

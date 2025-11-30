@@ -4,6 +4,8 @@ A modern, self-hosted URL shortener service built with TanStack Start, React, Pr
 
 ![Screenshot](design/screenshot-1.png)
 
+> **⚠️ Warning**: This project is under active development and is not ready for production use. Use at your own risk.
+
 ## Features
 
 - 🔗 **URL Shortening**: Create short links from long URLs
@@ -14,77 +16,48 @@ A modern, self-hosted URL shortener service built with TanStack Start, React, Pr
 - 🐳 **Docker Ready**: Includes Dockerfile and compose configuration
 - 💾 **SQLite Database**: Lightweight, file-based database
 
-## Prerequisites
-
-- [Bun](https://bun.sh) (v1.3.3 or higher) - for local development
-- Docker and Docker Compose - for containerized deployment (optional)
+📋 See [Release Notes](RELEASE_NOTES.md) for version history and changes.
 
 ## Quick Start
 
-### Local Development
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd cutly
-   ```
-
-2. **Install dependencies**
-   ```bash
-   bun install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp env.example .env.local
-   ```
-   Edit `.env.local` with your configuration (see [Environment Variables](#environment-variables) section).
-
-4. **Set up the database**
-   ```bash
-   bun run db:push
-   ```
-
-5. **Start the development server**
-   ```bash
-   bun run dev
-   ```
-
-   The application will be available at `http://localhost:3000`
-
-### Production Build
-
-1. **Build the application**
-   ```bash
-   bun run build
-   ```
-
-2. **Start the production server**
-   ```bash
-   bun run serve
-   ```
-
-## Docker Deployment
-
 ### Using Docker Compose (Recommended)
 
-1. **Create a `.env` file** (or use environment variables)
+1. **Download `compose.yml`**
    ```bash
-   cp env.example .env
-   # Edit .env with your configuration
+   curl -O https://github.com/skrylnikov/cutly/releases/download/v0.1.1/compose.yml
    ```
 
-2. **Start the service**
+2. **Configure environment variables** (optional)
+   
+   Edit `compose.yml` and replace the environment variable placeholders with your values:
+   
+   ```yaml
+   environment:
+     # Database configuration
+     - DATABASE_URL=file:/app/data/app.db
+     
+     # OIDC Configuration (optional - leave empty to disable authentication)
+     - OIDC_ISSUER=https://your-oidc-provider.com
+     - OIDC_CLIENT_ID=your-client-id
+     - OIDC_CLIENT_SECRET=your-client-secret
+     
+     # Application URL (optional - defaults to http://localhost:3000)
+     - APP_URL=http://localhost:3000
+   ```
+   
+   If you don't need authentication, you can leave the OIDC variables empty (they default to empty strings).
+
+3. **Start the service**
    ```bash
    docker compose up -d
    ```
 
-3. **View logs**
+4. **View logs**
    ```bash
    docker compose logs -f
    ```
 
-4. **Stop the service**
+5. **Stop the service**
    ```bash
    docker compose down
    ```
@@ -106,7 +79,7 @@ The application will be available at `http://localhost:3000` (or the port you co
      -v $(pwd)/data:/app/data \
      -e DATABASE_URL="file:/app/data/dev.db" \
      -e APP_URL="http://localhost:3000" \
-     cutly-app
+     ghcr.io/skrylnikov/cutly:0.1.1
    ```
 
 ## Environment Variables
@@ -161,6 +134,41 @@ The application uses the following environment variables:
   1. Register your application with your OIDC provider
   2. Set the redirect URI to: `{APP_URL}/api/auth/callback`
   3. Configure the three environment variables
+
+
+## Development
+
+0. **Prerequisites**: Install [Bun](https://bun.sh) (v1.3.3 or higher)
+
+1. **Clone the repository**
+   ```bash
+   git clone git@github.com:skrylnikov/cutly.git
+   cd cutly
+   ```
+
+2. **Install dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env.local
+   ```
+   Edit `.env.local` with your configuration (see [Environment Variables](#environment-variables) section).
+
+4. **Set up the database**
+   ```bash
+   bun run db:push
+   ```
+
+5. **Start the development server**
+   ```bash
+   bun run dev
+   ```
+
+   The application will be available at `http://localhost:3000`
+
 
 ## Database Management
 
@@ -249,41 +257,6 @@ cutly/
 └── package.json         # Dependencies and scripts
 ```
 
-## Production Deployment
-
-### Docker Compose Example
-
-See `compose.yml` for a complete example. Key points:
-
-- Database is persisted in `./data` directory
-- Health checks are configured
-- Environment variables can be set via `.env` file or environment
-- Container automatically runs migrations on startup
-
-### Reverse Proxy Setup
-
-When deploying behind a reverse proxy (nginx, Traefik, etc.):
-
-1. Set `APP_URL` to your public URL
-2. Configure proxy to forward requests to the container
-3. Ensure proper headers are forwarded (especially for OIDC callbacks)
-
-Example nginx configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name short.ly;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
 
 ## Troubleshooting
 

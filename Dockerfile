@@ -1,5 +1,5 @@
-# use the official Bun image
-FROM oven/bun:1.3.3-alpine AS base
+# use the official Bun image (Debian-based for native module compatibility)
+FROM oven/bun:1.3.3 AS base
 WORKDIR /usr/src/app
 
 # install dependencies into temp directory
@@ -27,8 +27,12 @@ RUN bun run build
 
 # copy production dependencies and source code into final image
 FROM base AS release
-# Install curl for healthcheck and su-exec for user switching
-RUN apk add --no-cache curl su-exec
+# Install curl for healthcheck and sudo for user switching
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "bun ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/bun
 
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/.output ./.output

@@ -33,3 +33,39 @@ export function getBaseUrl(): string {
 	// Normalize URL to ensure it has a protocol
 	return normalizeUrl(appUrl);
 }
+
+/**
+ * Calculate possible number of URLs for given length
+ * nanoid uses 64-character alphabet (A-Z, a-z, 0-9, _, -)
+ */
+export function calculatePossibleUrls(length: number): number {
+	return Math.pow(64, length);
+}
+
+/**
+ * Format large numbers for readability with commas and suffixes
+ */
+export function formatLargeNumber(num: number): string {
+	// Add commas as thousand separators
+	const addCommas = (n: number): string => {
+		return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	};
+
+	if (num < 1000) {
+		return addCommas(num);
+	}
+	if (num < 1000000) {
+		return addCommas(Math.floor(num / 1000)) + "K";
+	}
+	if (num < 1000000000) {
+		return addCommas(Math.floor(num / 1000000)) + "M";
+	}
+	if (num < 1000000000000) {
+		return addCommas(Math.floor(num / 1000000000)) + "B";
+	}
+	if (num < 1000000000000000) {
+		return addCommas(Math.floor(num / 1000000000000)) + "T";
+	}
+	// For extremely large numbers, use T suffix with full number
+	return addCommas(num) + "T";
+}

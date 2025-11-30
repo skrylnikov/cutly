@@ -26,7 +26,7 @@ export const createShortLinkFn = createServerFn({
 			try {
 				const result = await createShortLink({
 					originalUrl: data.originalUrl,
-					length: data.length ?? 6,
+					length: data.length ?? 4,
 					userId,
 				});
 
@@ -45,7 +45,7 @@ export const createShortLinkFn = createServerFn({
 		try {
 			const result = await createShortLink({
 				originalUrl: data.originalUrl,
-				length: data.length ?? 6,
+				length: data.length ?? 4,
 				userId: userId ?? null,
 			});
 

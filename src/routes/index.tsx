@@ -18,7 +18,13 @@ import { Check, Copy, X } from "lucide-react";
 import { useState } from "react";
 import AuthButton from "../components/AuthButton";
 import { createShortLinkFn } from "../lib/server-functions";
-import { getBaseUrl, isValidUrl, normalizeUrl } from "../lib/utils";
+import {
+	calculatePossibleUrls,
+	formatLargeNumber,
+	getBaseUrl,
+	isValidUrl,
+	normalizeUrl,
+} from "../lib/utils";
 
 export const Route = createFileRoute("/")({
 	component: Home,
@@ -26,7 +32,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
 	const [url, setUrl] = useState("");
-	const [length, setLength] = useState(6);
+	const [length, setLength] = useState(4);
 	const [shortLink, setShortLink] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -87,17 +93,20 @@ function Home() {
 							<Text size="sm" fw={500} mb="xs">
 								Short link length: {length} characters
 							</Text>
+							<Text size="xs" c="dimmed" mb="sm">
+								Possible combinations: {formatLargeNumber(calculatePossibleUrls(length))}
+							</Text>
 							<Slider
 								value={length}
 								onChange={setLength}
-								min={4}
-								max={20}
+								min={2}
+								max={10}
 								marks={[
+									{ value: 2, label: "2" },
 									{ value: 4, label: "4" },
 									{ value: 6, label: "6" },
+									{ value: 8, label: "8" },
 									{ value: 10, label: "10" },
-									{ value: 15, label: "15" },
-									{ value: 20, label: "20" },
 								]}
 							/>
 						</div>

@@ -31,9 +31,9 @@ export async function createShortLink(
 		throw new Error("Invalid URL");
 	}
 
-	const length = input.length ?? 6;
-	if (length < 4 || length > 20) {
-		throw new Error("Length must be between 4 and 20");
+	const length = input.length ?? 4;
+	if (length < 2 || length > 10) {
+		throw new Error("Length must be between 2 and 10");
 	}
 
 	// Check if the original link exists in the database

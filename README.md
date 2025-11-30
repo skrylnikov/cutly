@@ -2,6 +2,8 @@
 
 A modern, self-hosted URL shortener service built with TanStack Start, React, Prisma, and SQLite. Features optional OIDC authentication and a clean, user-friendly interface.
 
+![Screenshot](design/screenshot-1.png)
+
 ## Features
 
 - 🔗 **URL Shortening**: Create short links from long URLs

@@ -124,6 +124,17 @@ export async function handleCallback(
 }
 
 /**
+ * Check if OIDC is configured
+ */
+export function isOidcConfigured(): boolean {
+	return !!(
+		process.env.OIDC_ISSUER &&
+		process.env.OIDC_CLIENT_ID &&
+		process.env.OIDC_CLIENT_SECRET
+	);
+}
+
+/**
  * Check authorization (middleware)
  */
 export async function requireAuth(

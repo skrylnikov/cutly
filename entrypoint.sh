@@ -13,5 +13,5 @@ echo "Running database migrations..."
 su-exec bun bunx prisma migrate deploy
 
 echo "Migrations completed successfully. Starting application..."
-exec su-exec bun bun run serve --port 3000
+exec su-exec bun bun run serve --port 3000 --host 0.0.0.0
 

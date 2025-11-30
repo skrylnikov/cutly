@@ -40,7 +40,8 @@ COPY --from=prerelease /usr/src/app/package.json ./package.json
 COPY --from=prerelease /usr/src/app/prisma ./prisma
 COPY --from=prerelease /usr/src/app/prisma.config.ts ./prisma.config.ts
 COPY --from=prerelease /usr/src/app/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && \
+    chown -R bun:bun /usr/src/app
 
 # run the app
 # Note: entrypoint.sh runs as root to fix volume permissions, then switches to bun user

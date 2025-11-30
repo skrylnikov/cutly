@@ -17,7 +17,9 @@ const getSession = createServerFn({
 	.middleware([requestMiddleware])
 	.handler(async ({ context }) => {
 		const session = await getAuthSession(context.request);
-		return session ? { userId: session.userId, displayName: session.displayName } : null;
+		return session
+			? { userId: session.userId, displayName: session.displayName }
+			: null;
 	});
 
 const checkOidcConfigured = createServerFn({
@@ -28,7 +30,10 @@ const checkOidcConfigured = createServerFn({
 });
 
 export default function AuthButton() {
-	const [session, setSession] = useState<{ userId: string; displayName: string } | null>(null);
+	const [session, setSession] = useState<{
+		userId: string;
+		displayName: string;
+	} | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isOidcConfigured, setIsOidcConfigured] = useState(false);
 

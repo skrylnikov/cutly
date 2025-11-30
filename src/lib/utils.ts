@@ -29,5 +29,7 @@ export function getBaseUrl(): string {
 		return window.location.origin;
 	}
 	// On server use environment variable or default value
-	return process.env.APP_URL || "http://localhost:3000";
+	const appUrl = process.env.APP_URL || "http://localhost:3000";
+	// Normalize URL to ensure it has a protocol
+	return normalizeUrl(appUrl);
 }

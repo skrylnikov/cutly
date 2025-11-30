@@ -20,7 +20,7 @@
   "dependencies": {
     "@mantine/core": "^8.3.9",
     "@mantine/hooks": "^8.3.9",
-    "@prisma/adapter-better-sqlite3": "^7.0.1",
+    "@prisma/adapter-libsql": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "@tanstack/react-devtools": "^0.8.2",
     "@tanstack/react-router": "^1.139.12",

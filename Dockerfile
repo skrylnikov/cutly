@@ -5,8 +5,6 @@ WORKDIR /usr/src/app
 # install dependencies into temp directory
 # this will cache them and speed up future builds
 FROM base AS install
-# Install build dependencies for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++
 RUN mkdir -p /temp/dev
 COPY package.json bun.lock /temp/dev/
 RUN cd /temp/dev && bun install --frozen-lockfile

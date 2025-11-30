@@ -3,10 +3,12 @@ set -e
 
 # Ensure data directory exists and has correct permissions
 # This is needed when volume is mounted from compose.yml
-if [ ! -d "/app/data" ]; then
-    mkdir -p /app/data
+# Note: Dockerfile uses /usr/src/app as WORKDIR, but volumes mount to /app/data
+DATA_DIR="/app/data"
+if [ ! -d "$DATA_DIR" ]; then
+    mkdir -p "$DATA_DIR"
 fi
-chown -R bun:bun /app/data
+chown -R bun:bun "$DATA_DIR"
 
 # Switch to bun user for running the application
 echo "Running database migrations..."
@@ -14,11 +16,23 @@ su-exec bun bunx prisma migrate deploy
 
 # Set Vite additional server allowed hosts from APP_URL
 if [ -n "$APP_URL" ]; then
-    # Extract host from APP_URL (remove protocol and path)
-    HOST=$(echo "$APP_URL" | sed -E 's|^https?://||' | sed 's|/.*||')
-    export __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS="$HOST"
+    # Extract host from APP_URL (remove protocol and path) for Vite only
+    VITE_HOST=$(echo "$APP_URL" | sed -E 's|^https?://||' | sed 's|/.*||')
+    export __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS="$VITE_HOST"
 fi
 
 echo "Migrations completed successfully. Starting application..."
-exec su-exec bun bun run serve --port 3000 --host 0.0.0.0
+
+# Set port and host for Nitro server
+export PORT=${PORT:-3000}
+export HOST=${HOST:-0.0.0.0}
+export NITRO_PORT=${PORT}
+export NITRO_HOST=${HOST}
+export NODE_ENV=production
+
+echo "Starting Nitro server with PORT=$PORT, HOST=$HOST"
+
+# Change to app directory and run Nitro server
+cd /usr/src/app
+exec su-exec bun bun .output/server/index.mjs
 

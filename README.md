@@ -40,12 +40,13 @@ A modern, self-hosted URL shortener service built with TanStack Start, React, Pr
      - OIDC_ISSUER=https://your-oidc-provider.com
      - OIDC_CLIENT_ID=your-client-id
      - OIDC_CLIENT_SECRET=your-client-secret
+     - JWT_SECRET=your-secret-key-for-jwt-signing
      
      # Application URL (optional - defaults to http://localhost:3000)
      - APP_URL=http://localhost:3000
    ```
    
-   If you don't need authentication, you can leave the OIDC variables empty (they default to empty strings).
+   If you don't need authentication, you can leave the OIDC variables empty (they default to empty strings). Note: All four OIDC-related variables (`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and `JWT_SECRET`) must be set together for authentication to work.
 
 3. **Start the service**
    ```bash
@@ -100,6 +101,7 @@ The application uses the following environment variables:
 | `OIDC_ISSUER` | OIDC provider issuer URL. If not set, authentication is disabled. | - | `https://accounts.google.com` |
 | `OIDC_CLIENT_ID` | OIDC client ID. Required if OIDC authentication is enabled. | - | `your-client-id` |
 | `OIDC_CLIENT_SECRET` | OIDC client secret. Required if OIDC authentication is enabled. | - | `your-client-secret` |
+| `JWT_SECRET` | Secret key for signing JWT tokens. Required if OIDC authentication is enabled. | - | `your-secret-key-for-jwt-signing` |
 
 ### Environment Variable Details
 
@@ -122,18 +124,45 @@ The application uses the following environment variables:
   - When the application is not accessible at `http://localhost:3000`
 - **Example**: If your app is accessible at `https://short.ly`, set `APP_URL=https://short.ly`
 
-#### OIDC Configuration (`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`)
+#### OIDC Configuration (`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `JWT_SECRET`)
 
-- **Type**: Optional (all three must be set together to enable authentication)
+- **Type**: Optional (all four must be set together to enable authentication)
 - **Purpose**: Enable OIDC-based user authentication
 - **Behavior**:
-  - If all three variables are set: Authentication is enabled, users must log in to create short links
+  - If all four variables are set: Authentication is enabled, users must log in to create short links
   - If any are missing: Authentication is disabled, anyone can create short links
 - **Supported Providers**: Any OIDC-compliant provider (Google, Auth0, Keycloak, etc.)
 - **Setup**:
   1. Register your application with your OIDC provider
   2. Set the redirect URI to: `{APP_URL}/api/auth/callback`
-  3. Configure the three environment variables
+  3. Generate a JWT secret key (see below)
+  4. Configure all four environment variables
+
+**Generating JWT Secret**:
+
+The `JWT_SECRET` is used to sign and verify JWT tokens for user sessions using the HS512 algorithm. For HS512 (HMAC with SHA-512), the minimum recommended key size is **64 bytes (512 bits)** to match the algorithm's security strength.
+
+Generate a secure random secret key using one of the following methods:
+
+- **Using OpenSSL** (recommended):
+  ```bash
+  openssl rand -base64 64
+  ```
+  This generates 64 random bytes, which results in an 88-character base64-encoded string.
+
+- **Using Node.js/Bun**:
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
+  ```
+  This generates 64 random bytes, which results in an 88-character base64-encoded string.
+
+- **Using Python**:
+  ```bash
+  python3 -c "import secrets; print(secrets.token_urlsafe(64))"
+  ```
+  This generates 64 random bytes using URL-safe base64 encoding.
+
+**Important**: The secret must be at least **64 bytes** (not characters) to meet HS512 security requirements. The base64-encoded string will be approximately 88 characters long. Keep the secret secure and never commit it to version control.
 
 
 ## Development
@@ -268,7 +297,8 @@ cutly/
 
 ### Authentication Issues
 
-- **OIDC not working**: Verify all three OIDC variables are set correctly
+- **OIDC not working**: Verify all four OIDC-related variables are set correctly (`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and `JWT_SECRET`)
+- **JWT errors**: Ensure `JWT_SECRET` is set and is a secure random string generated from at least 64 bytes (approximately 88 base64 characters) to meet HS512 security requirements
 - **Callback errors**: Ensure `APP_URL` matches your public URL
 - **Redirect URI mismatch**: Check that the redirect URI in your OIDC provider matches `{APP_URL}/api/auth/callback`
 

@@ -1,7 +1,122 @@
+import * as jose from "jose";
 import type { Configuration } from "openid-client";
 import * as client from "openid-client";
+import { z } from "zod";
 
 let config: Configuration | null = null;
+let encodedJwtSecret: Uint8Array | null = null;
+
+/**
+ * JWT token expiration time
+ * This value is used for both JWT expiration and cookie Max-Age
+ */
+const JWT_EXPIRATION_TIME = "24h";
+
+/**
+ * Get cookie Max-Age in seconds based on JWT expiration time
+ * Converts time strings like "24h", "7d" to seconds
+ */
+export function getJwtCookieMaxAge(): number {
+	const timeStr = JWT_EXPIRATION_TIME.toLowerCase();
+
+	if (timeStr.endsWith("h")) {
+		const hours = parseInt(timeStr.slice(0, -1), 10);
+		if (Number.isNaN(hours) || hours <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
+			return 24 * 60 * 60;
+		}
+		return hours * 60 * 60;
+	}
+	if (timeStr.endsWith("d")) {
+		const days = parseInt(timeStr.slice(0, -1), 10);
+		if (Number.isNaN(days) || days <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
+			return 24 * 60 * 60;
+		}
+		return days * 24 * 60 * 60;
+	}
+	if (timeStr.endsWith("m")) {
+		const minutes = parseInt(timeStr.slice(0, -1), 10);
+		if (Number.isNaN(minutes) || minutes <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
+			return 24 * 60 * 60;
+		}
+		return minutes * 60;
+	}
+	if (timeStr.endsWith("s")) {
+		const seconds = parseInt(timeStr.slice(0, -1), 10);
+		if (Number.isNaN(seconds) || seconds <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
+			return 24 * 60 * 60;
+		}
+		return seconds;
+	}
+
+	// Default fallback: 24 hours
+	console.warn(
+		`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+	);
+	return 24 * 60 * 60;
+}
+
+/**
+ * Check if Secure flag should be used for cookies
+ * Returns true if APP_URL uses HTTPS protocol
+ */
+export function shouldUseSecureCookie(): boolean {
+	const appUrl = process.env.APP_URL;
+	if (!appUrl) {
+		// Default to false for local development
+		return false;
+	}
+
+	try {
+		const url = new URL(appUrl);
+		return url.protocol === "https:";
+	} catch {
+		// If APP_URL is invalid, default to false
+		return false;
+	}
+}
+
+/**
+ * Zod schema for JWT payload validation
+ */
+const jwtPayloadSchema = z.object({
+	userId: z.string().min(1),
+	displayName: z.string().optional(),
+});
+
+/**
+ * Get encoded JWT secret, encoding it once and caching the result
+ */
+function getEncodedJwtSecret(): Uint8Array {
+	if (encodedJwtSecret) {
+		return encodedJwtSecret;
+	}
+
+	const jwtSecret = process.env.JWT_SECRET;
+	if (!jwtSecret) {
+		throw new Error("JWT_SECRET is not configured");
+	}
+
+	encodedJwtSecret = new TextEncoder().encode(jwtSecret);
+	if (encodedJwtSecret.length < 64) {
+		throw new Error(
+			"JWT_SECRET is too short. HS512 requires a secret of at least 64 bytes. " +
+				`Current length: ${encodedJwtSecret.length} bytes. Please use a longer secret.`,
+		);
+	}
+	return encodedJwtSecret;
+}
 
 /**
  * Initialize OIDC client
@@ -29,6 +144,22 @@ export async function getClient(): Promise<Configuration | null> {
 }
 
 /**
+ * Create JWT token for user session
+ */
+export async function createJWT(
+	userId: string,
+	displayName: string,
+): Promise<string> {
+	const secret = getEncodedJwtSecret();
+	const token = await new jose.SignJWT({ userId, displayName })
+		.setProtectedHeader({ alg: "HS512" })
+		.setExpirationTime(JWT_EXPIRATION_TIME)
+		.sign(secret);
+
+	return token;
+}
+
+/**
  * Get current user session from cookies
  */
 export async function getAuthSession(
@@ -42,15 +173,20 @@ export async function getAuthSession(
 				.find((c) => c.trim().startsWith("oidc_session="));
 			if (sessionCookie) {
 				try {
-					const sessionValue = decodeURIComponent(sessionCookie.split("=")[1]);
-					const session = JSON.parse(sessionValue);
-					if (session.userId) {
-						return {
-							userId: session.userId,
-							displayName: session.displayName || session.userId,
-						};
-					}
-					return null;
+					const jwtToken = decodeURIComponent(sessionCookie.split("=")[1]);
+					const secret = getEncodedJwtSecret();
+					const { payload } = await jose.jwtVerify(jwtToken, secret, {
+						algorithms: ["HS512"],
+					});
+
+					// Validate payload structure with zod
+					const validatedPayload = jwtPayloadSchema.parse(payload);
+
+					return {
+						userId: validatedPayload.userId,
+						displayName:
+							validatedPayload.displayName || validatedPayload.userId,
+					};
 				} catch {
 					return null;
 				}
@@ -145,7 +281,8 @@ export function isOidcConfigured(): boolean {
 	return !!(
 		process.env.OIDC_ISSUER &&
 		process.env.OIDC_CLIENT_ID &&
-		process.env.OIDC_CLIENT_SECRET
+		process.env.OIDC_CLIENT_SECRET &&
+		process.env.JWT_SECRET
 	);
 }
 

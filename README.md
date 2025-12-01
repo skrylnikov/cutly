@@ -140,24 +140,29 @@ The application uses the following environment variables:
 
 **Generating JWT Secret**:
 
-The `JWT_SECRET` is used to sign and verify JWT tokens for user sessions. Generate a secure random secret key using one of the following methods:
+The `JWT_SECRET` is used to sign and verify JWT tokens for user sessions using the HS512 algorithm. For HS512 (HMAC with SHA-512), the minimum recommended key size is **64 bytes (512 bits)** to match the algorithm's security strength.
+
+Generate a secure random secret key using one of the following methods:
 
 - **Using OpenSSL** (recommended):
   ```bash
-  openssl rand -base64 32
+  openssl rand -base64 64
   ```
+  This generates 64 random bytes, which results in an 88-character base64-encoded string.
 
 - **Using Node.js/Bun**:
   ```bash
-  node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+  node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
   ```
+  This generates 64 random bytes, which results in an 88-character base64-encoded string.
 
 - **Using Python**:
   ```bash
-  python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+  python3 -c "import secrets; print(secrets.token_urlsafe(64))"
   ```
+  This generates 64 random bytes using URL-safe base64 encoding.
 
-The generated secret should be at least 32 characters long and kept secure. Never commit it to version control.
+**Important**: The secret must be at least **64 bytes** (not characters) to meet HS512 security requirements. The base64-encoded string will be approximately 88 characters long. Keep the secret secure and never commit it to version control.
 
 
 ## Development
@@ -293,7 +298,7 @@ cutly/
 ### Authentication Issues
 
 - **OIDC not working**: Verify all four OIDC-related variables are set correctly (`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and `JWT_SECRET`)
-- **JWT errors**: Ensure `JWT_SECRET` is set and is a secure random string (at least 32 characters)
+- **JWT errors**: Ensure `JWT_SECRET` is set and is a secure random string generated from at least 64 bytes (approximately 88 base64 characters) to meet HS512 security requirements
 - **Callback errors**: Ensure `APP_URL` matches your public URL
 - **Redirect URI mismatch**: Check that the redirect URI in your OIDC provider matches `{APP_URL}/api/auth/callback`
 

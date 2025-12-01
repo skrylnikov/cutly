@@ -1,8 +1,88 @@
 import * as jose from "jose";
 import type { Configuration } from "openid-client";
 import * as client from "openid-client";
+import { z } from "zod";
 
 let config: Configuration | null = null;
+let encodedJwtSecret: Uint8Array | null = null;
+
+/**
+ * JWT token expiration time
+ * This value is used for both JWT expiration and cookie Max-Age
+ */
+const JWT_EXPIRATION_TIME = "24h";
+
+/**
+ * Get cookie Max-Age in seconds based on JWT expiration time
+ * Converts time strings like "24h", "7d" to seconds
+ */
+export function getJwtCookieMaxAge(): number {
+	const timeStr = JWT_EXPIRATION_TIME.toLowerCase();
+
+	if (timeStr.endsWith("h")) {
+		const hours = parseInt(timeStr.slice(0, -1), 10);
+		return hours * 60 * 60;
+	}
+	if (timeStr.endsWith("d")) {
+		const days = parseInt(timeStr.slice(0, -1), 10);
+		return days * 24 * 60 * 60;
+	}
+	if (timeStr.endsWith("m")) {
+		const minutes = parseInt(timeStr.slice(0, -1), 10);
+		return minutes * 60;
+	}
+	if (timeStr.endsWith("s")) {
+		return parseInt(timeStr.slice(0, -1), 10);
+	}
+
+	// Default fallback: 24 hours
+	return 24 * 60 * 60;
+}
+
+/**
+ * Check if Secure flag should be used for cookies
+ * Returns true if APP_URL uses HTTPS protocol
+ */
+export function shouldUseSecureCookie(): boolean {
+	const appUrl = process.env.APP_URL;
+	if (!appUrl) {
+		// Default to false for local development
+		return false;
+	}
+
+	try {
+		const url = new URL(appUrl);
+		return url.protocol === "https:";
+	} catch {
+		// If APP_URL is invalid, default to false
+		return false;
+	}
+}
+
+/**
+ * Zod schema for JWT payload validation
+ */
+const jwtPayloadSchema = z.object({
+	userId: z.string().min(1),
+	displayName: z.string().optional(),
+});
+
+/**
+ * Get encoded JWT secret, encoding it once and caching the result
+ */
+function getEncodedJwtSecret(): Uint8Array {
+	if (encodedJwtSecret) {
+		return encodedJwtSecret;
+	}
+
+	const jwtSecret = process.env.JWT_SECRET;
+	if (!jwtSecret) {
+		throw new Error("JWT_SECRET is not configured");
+	}
+
+	encodedJwtSecret = new TextEncoder().encode(jwtSecret);
+	return encodedJwtSecret;
+}
 
 /**
  * Initialize OIDC client
@@ -36,15 +116,10 @@ export async function createJWT(
 	userId: string,
 	displayName: string,
 ): Promise<string> {
-	const jwtSecret = process.env.JWT_SECRET;
-	if (!jwtSecret) {
-		throw new Error("JWT_SECRET is not configured");
-	}
-
-	const secret = new TextEncoder().encode(jwtSecret);
+	const secret = getEncodedJwtSecret();
 	const token = await new jose.SignJWT({ userId, displayName })
 		.setProtectedHeader({ alg: "HS512" })
-		.setExpirationTime("24h")
+		.setExpirationTime(JWT_EXPIRATION_TIME)
 		.sign(secret);
 
 	return token;
@@ -65,26 +140,19 @@ export async function getAuthSession(
 			if (sessionCookie) {
 				try {
 					const jwtToken = decodeURIComponent(sessionCookie.split("=")[1]);
-					const jwtSecret = process.env.JWT_SECRET;
-					if (!jwtSecret) {
-						return null;
-					}
-
-					const secret = new TextEncoder().encode(jwtSecret);
+					const secret = getEncodedJwtSecret();
 					const { payload } = await jose.jwtVerify(jwtToken, secret, {
 						algorithms: ["HS512"],
 					});
 
-					const userId = payload.userId as string;
-					const displayName = (payload.displayName as string) || userId;
+					// Validate payload structure with zod
+					const validatedPayload = jwtPayloadSchema.parse(payload);
 
-					if (userId) {
-						return {
-							userId,
-							displayName,
-						};
-					}
-					return null;
+					return {
+						userId: validatedPayload.userId,
+						displayName:
+							validatedPayload.displayName || validatedPayload.userId,
+					};
 				} catch {
 					return null;
 				}

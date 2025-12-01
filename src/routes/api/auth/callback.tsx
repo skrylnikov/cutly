@@ -1,5 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { createJWT, handleCallback } from "../../../lib/auth";
+import {
+	createJWT,
+	getJwtCookieMaxAge,
+	handleCallback,
+	shouldUseSecureCookie,
+} from "../../../lib/auth";
 
 export const Route = createFileRoute("/api/auth/callback")({
 	server: {
@@ -46,11 +51,13 @@ export const Route = createFileRoute("/api/auth/callback")({
 
 					// Create JWT token and session cookie, remove temporary cookies
 					const jwtToken = await createJWT(userId, displayName);
-					const sessionCookie = `oidc_session=${encodeURIComponent(jwtToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
+					const maxAge = getJwtCookieMaxAge();
+					const secureFlag = shouldUseSecureCookie() ? "; Secure" : "";
+					const sessionCookie = `oidc_session=${encodeURIComponent(jwtToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secureFlag}`;
 					const clearCookies = [
 						sessionCookie,
-						"oidc_code_verifier=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
-						"oidc_state=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
+						`oidc_code_verifier=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secureFlag}`,
+						`oidc_state=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secureFlag}`,
 					];
 
 					const headers = new Headers();

@@ -99,6 +99,12 @@ function getEncodedJwtSecret(): Uint8Array {
 	}
 
 	encodedJwtSecret = new TextEncoder().encode(jwtSecret);
+	if (encodedJwtSecret.length < 64) {
+		throw new Error(
+			"JWT_SECRET is too short. HS512 requires a secret of at least 64 bytes. " +
+			`Current length: ${encodedJwtSecret.length} bytes. Please use a longer secret.`
+		);
+	}
 	return encodedJwtSecret;
 }
 

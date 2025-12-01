@@ -23,7 +23,7 @@
 
 ### 🔧 Technical Changes
 
-- Upgraded `jose` library to version 6.1.2
+- Added `jose` library at version 6.1.2
 - Replaced JSON cookie storage with JWT token-based authentication
 - Updated `getAuthSession()` to validate JWT tokens
 - Added `createJWT()` function for token generation

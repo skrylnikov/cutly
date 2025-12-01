@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { handleCallback } from "../../../lib/auth";
+import { createJWT, handleCallback } from "../../../lib/auth";
 
 export const Route = createFileRoute("/api/auth/callback")({
 	server: {
@@ -44,9 +44,9 @@ export const Route = createFileRoute("/api/auth/callback")({
 						savedState,
 					);
 
-					// Create session cookie and remove temporary cookies
-					const session = JSON.stringify({ userId, displayName });
-					const sessionCookie = `oidc_session=${encodeURIComponent(session)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
+					// Create JWT token and session cookie, remove temporary cookies
+					const jwtToken = await createJWT(userId, displayName);
+					const sessionCookie = `oidc_session=${encodeURIComponent(jwtToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
 					const clearCookies = [
 						sessionCookie,
 						"oidc_code_verifier=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",

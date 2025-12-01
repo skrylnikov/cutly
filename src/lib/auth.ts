@@ -1,3 +1,4 @@
+import * as jose from "jose";
 import type { Configuration } from "openid-client";
 import * as client from "openid-client";
 
@@ -29,6 +30,27 @@ export async function getClient(): Promise<Configuration | null> {
 }
 
 /**
+ * Create JWT token for user session
+ */
+export async function createJWT(
+	userId: string,
+	displayName: string,
+): Promise<string> {
+	const jwtSecret = process.env.JWT_SECRET;
+	if (!jwtSecret) {
+		throw new Error("JWT_SECRET is not configured");
+	}
+
+	const secret = new TextEncoder().encode(jwtSecret);
+	const token = await new jose.SignJWT({ userId, displayName })
+		.setProtectedHeader({ alg: "HS512" })
+		.setExpirationTime("24h")
+		.sign(secret);
+
+	return token;
+}
+
+/**
  * Get current user session from cookies
  */
 export async function getAuthSession(
@@ -42,12 +64,24 @@ export async function getAuthSession(
 				.find((c) => c.trim().startsWith("oidc_session="));
 			if (sessionCookie) {
 				try {
-					const sessionValue = decodeURIComponent(sessionCookie.split("=")[1]);
-					const session = JSON.parse(sessionValue);
-					if (session.userId) {
+					const jwtToken = decodeURIComponent(sessionCookie.split("=")[1]);
+					const jwtSecret = process.env.JWT_SECRET;
+					if (!jwtSecret) {
+						return null;
+					}
+
+					const secret = new TextEncoder().encode(jwtSecret);
+					const { payload } = await jose.jwtVerify(jwtToken, secret, {
+						algorithms: ["HS512"],
+					});
+
+					const userId = payload.userId as string;
+					const displayName = (payload.displayName as string) || userId;
+
+					if (userId) {
 						return {
-							userId: session.userId,
-							displayName: session.displayName || session.userId,
+							userId,
+							displayName,
 						};
 					}
 					return null;
@@ -145,7 +179,8 @@ export function isOidcConfigured(): boolean {
 	return !!(
 		process.env.OIDC_ISSUER &&
 		process.env.OIDC_CLIENT_ID &&
-		process.env.OIDC_CLIENT_SECRET
+		process.env.OIDC_CLIENT_SECRET &&
+		process.env.JWT_SECRET
 	);
 }
 

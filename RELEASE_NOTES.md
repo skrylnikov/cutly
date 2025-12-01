@@ -1,5 +1,35 @@
 # Release Notes
 
+## Version 0.2.0 — Add JWT
+
+### 🔒 Security Fixes
+
+- **Fixed security issue**: Replaced insecure cookie-based session storage with JWT tokens
+- Session data is now stored as signed JWT tokens using the `jose` library with HS512 algorithm
+- Improved session validation and security
+
+### ⚠️ Breaking Changes
+
+- **JWT_SECRET environment variable required**: When OIDC authentication is enabled, you must now configure the `JWT_SECRET` environment variable
+- The `JWT_SECRET` is used to sign and verify JWT tokens for user sessions
+- OIDC authentication will not work without `JWT_SECRET` configured
+- See README for instructions on generating a secure JWT secret
+
+### 📝 Documentation
+
+- Added JWT_SECRET to environment variables documentation
+- Added instructions for generating JWT secrets using OpenSSL, Node.js/Bun, and Python
+- Updated troubleshooting section with JWT-related information
+
+### 🔧 Technical Changes
+
+- Upgraded `jose` library to version 6.1.2
+- Replaced JSON cookie storage with JWT token-based authentication
+- Updated `getAuthSession()` to validate JWT tokens
+- Added `createJWT()` function for token generation
+
+---
+
 ## Version 0.1.1
 
 ### 🐛 Bug Fixes

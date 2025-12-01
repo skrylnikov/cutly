@@ -21,39 +21,49 @@ export function getJwtCookieMaxAge(): number {
 
 	if (timeStr.endsWith("h")) {
 		const hours = parseInt(timeStr.slice(0, -1), 10);
-		if (isNaN(hours) || hours <= 0) {
-			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+		if (Number.isNaN(hours) || hours <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
 			return 24 * 60 * 60;
 		}
 		return hours * 60 * 60;
 	}
 	if (timeStr.endsWith("d")) {
 		const days = parseInt(timeStr.slice(0, -1), 10);
-		if (isNaN(days) || days <= 0) {
-			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+		if (Number.isNaN(days) || days <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
 			return 24 * 60 * 60;
 		}
 		return days * 24 * 60 * 60;
 	}
 	if (timeStr.endsWith("m")) {
 		const minutes = parseInt(timeStr.slice(0, -1), 10);
-		if (isNaN(minutes) || minutes <= 0) {
-			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+		if (Number.isNaN(minutes) || minutes <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
 			return 24 * 60 * 60;
 		}
 		return minutes * 60;
 	}
 	if (timeStr.endsWith("s")) {
 		const seconds = parseInt(timeStr.slice(0, -1), 10);
-		if (isNaN(seconds) || seconds <= 0) {
-			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+		if (Number.isNaN(seconds) || seconds <= 0) {
+			console.warn(
+				`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+			);
 			return 24 * 60 * 60;
 		}
 		return seconds;
 	}
 
 	// Default fallback: 24 hours
-	console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+	console.warn(
+		`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`,
+	);
 	return 24 * 60 * 60;
 }
 
@@ -102,7 +112,7 @@ function getEncodedJwtSecret(): Uint8Array {
 	if (encodedJwtSecret.length < 64) {
 		throw new Error(
 			"JWT_SECRET is too short. HS512 requires a secret of at least 64 bytes. " +
-			`Current length: ${encodedJwtSecret.length} bytes. Please use a longer secret.`
+				`Current length: ${encodedJwtSecret.length} bytes. Please use a longer secret.`,
 		);
 	}
 	return encodedJwtSecret;

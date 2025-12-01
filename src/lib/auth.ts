@@ -21,21 +21,39 @@ export function getJwtCookieMaxAge(): number {
 
 	if (timeStr.endsWith("h")) {
 		const hours = parseInt(timeStr.slice(0, -1), 10);
+		if (isNaN(hours) || hours <= 0) {
+			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+			return 24 * 60 * 60;
+		}
 		return hours * 60 * 60;
 	}
 	if (timeStr.endsWith("d")) {
 		const days = parseInt(timeStr.slice(0, -1), 10);
+		if (isNaN(days) || days <= 0) {
+			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+			return 24 * 60 * 60;
+		}
 		return days * 24 * 60 * 60;
 	}
 	if (timeStr.endsWith("m")) {
 		const minutes = parseInt(timeStr.slice(0, -1), 10);
+		if (isNaN(minutes) || minutes <= 0) {
+			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+			return 24 * 60 * 60;
+		}
 		return minutes * 60;
 	}
 	if (timeStr.endsWith("s")) {
-		return parseInt(timeStr.slice(0, -1), 10);
+		const seconds = parseInt(timeStr.slice(0, -1), 10);
+		if (isNaN(seconds) || seconds <= 0) {
+			console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
+			return 24 * 60 * 60;
+		}
+		return seconds;
 	}
 
 	// Default fallback: 24 hours
+	console.warn(`[auth] Invalid JWT_EXPIRATION_TIME value: "${JWT_EXPIRATION_TIME}". Falling back to default (24h).`);
 	return 24 * 60 * 60;
 }
 

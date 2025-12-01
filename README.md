@@ -22,14 +22,14 @@ A modern, self-hosted URL shortener service built with TanStack Start, React, Pr
 
 ### Using Docker Compose (Recommended)
 
-1. **Download `compose.yml`**
+1. **Download `compose.yaml`**
    ```bash
-   curl -O https://github.com/skrylnikov/cutly/releases/download/v0.1.1/compose.yml
+   curl -O https://github.com/skrylnikov/cutly/releases/download/v0.2.0/compose.yaml
    ```
 
 2. **Configure environment variables** (optional)
    
-   Edit `compose.yml` and replace the environment variable placeholders with your values:
+   Edit `compose.yaml` and replace the environment variable placeholders with your values:
    
    ```yaml
    environment:
@@ -80,7 +80,7 @@ The application will be available at `http://localhost:3000` (or the port you co
      -v $(pwd)/data:/app/data \
      -e DATABASE_URL="file:/app/data/dev.db" \
      -e APP_URL="http://localhost:3000" \
-     ghcr.io/skrylnikov/cutly:0.1.1
+     ghcr.io/skrylnikov/cutly:0.2.0
    ```
 
 ## Environment Variables
@@ -282,7 +282,7 @@ cutly/
 │   ├── db.ts            # Database client
 │   └── router.tsx       # Router configuration
 ├── Dockerfile           # Docker image definition
-├── compose.yml          # Docker Compose configuration
+├── compose.yaml          # Docker Compose configuration
 └── package.json         # Dependencies and scripts
 ```
 
@@ -304,7 +304,7 @@ cutly/
 
 ### Port Conflicts
 
-- Change the port in `compose.yml` or use environment variables
+- Change the port in `compose.yaml` or use environment variables
 - Update `APP_URL` if using a different port
 
 ## License

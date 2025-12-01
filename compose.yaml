@@ -1,25 +1,24 @@
+
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: release
-    container_name: cutly-app-dev
+    image: ghcr.io/skrylnikov/cutly:0.2.0
+    container_name: cutly-app
     ports:
       - "3000:3000"
     environment:
       # Database configuration
-      - DATABASE_URL=file:/app/data/dev.db
+      - DATABASE_URL=file:/app/data/app.db
       
       # OIDC Configuration (optional - leave empty to disable authentication)
       - OIDC_ISSUER=${OIDC_ISSUER:-}
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
+      - JWT_SECRET=${JWT_SECRET:-}
       
       # Application URL (optional - defaults to http://localhost:3000)
       - APP_URL=${APP_URL:-http://localhost:3000}
     volumes:
-      - cutly-data-dev:/app/data
+      - cutly-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
@@ -29,5 +28,4 @@ services:
       start_period: 40s
 
 volumes:
-  cutly-data-dev:
-
+  cutly-data:
